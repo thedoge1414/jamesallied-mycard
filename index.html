@@ -5,77 +5,64 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>MyCard — User Portal</title>
   <style>
-    :root{
-      --bg:#f6f8fb; --card:#ffffff; --muted:#64748b; --accent:#0b74de; --danger:#ef4444;
-      --success:#059669; --radius:12px; --pad:18px; font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;
-    }
-    html,body{height:100%; margin:0; background:var(--bg); color:#0f172a}
-    .wrap{max-width:920px; margin:36px auto; padding:20px}
-    .grid{display:grid; grid-template-columns:360px 1fr; gap:20px}
-    .card{background:var(--card); border-radius:var(--radius); padding:var(--pad); box-shadow:0 6px 20px rgba(2,6,23,0.06)}
-    h1{margin:0 0 8px; font-size:20px}
-    label{display:block; font-size:13px; color:var(--muted); margin-top:12px}
-    input[type="text"], input[type="password"], input[type="number"]{
-      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #e6eef8; box-sizing:border-box;
-      font-size:15px; margin-top:6px;
-    }
-    button{background:var(--accent); color:#fff; border:0; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:600}
-    button.ghost{background:transparent; color:var(--accent); border:1px solid #dbeafe}
-    .muted{color:var(--muted); font-size:13px}
-    .small{font-size:13px; color:var(--muted)}
-    .row{display:flex; gap:8px}
-    .actions{display:flex; gap:8px; margin-top:12px}
-    .balance{font-size:28px; font-weight:700; margin-top:6px}
-    .tx-list{margin-top:12px; max-height:360px; overflow:auto}
-    table{width:100%; border-collapse:collapse; font-size:14px}
-    th,td{padding:10px 8px; text-align:left; border-bottom:1px solid #f1f5f9}
-    .status{padding:6px 8px; border-radius:8px; font-weight:600; font-size:12px}
+    :root{--bg:#f6f8fb;--card:#fff;--muted:#64748b;--accent:#0b74de;--danger:#ef4444;--radius:12px;--pad:18px;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial}
+    html,body{height:100%;margin:0;background:var(--bg);color:#0f172a}
+    .wrap{max-width:920px;margin:36px auto;padding:20px}
+    .grid{display:grid;grid-template-columns:360px 1fr;gap:20px}
+    .card{background:var(--card);border-radius:var(--radius);padding:var(--pad);box-shadow:0 6px 20px rgba(2,6,23,0.06)}
+    h1{margin:0 0 8px;font-size:20px}
+    label{display:block;font-size:13px;color:var(--muted);margin-top:12px}
+    input[type="text"],input[type="password"],input[type="number"]{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #e6eef8;box-sizing:border-box;font-size:15px;margin-top:6px}
+    button{background:var(--accent);color:#fff;border:0;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+    button.ghost{background:transparent;color:var(--accent);border:1px solid #dbeafe}
+    .small{font-size:13px;color:var(--muted)}
+    .row{display:flex;gap:8px}
+    .actions{display:flex;gap:8px;margin-top:12px}
+    .balance{font-size:28px;font-weight:700;margin-top:6px}
+    .tx-list{margin-top:12px;max-height:360px;overflow:auto}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #f1f5f9}
+    .status{padding:6px 8px;border-radius:8px;font-weight:600;font-size:12px}
     .status.approved{background:#ecfdf5;color:#065f46}
     .status.reverted{background:#fff7ed;color:#92400e}
     .status.pending{background:#eef2ff;color:#1e3a8a}
     .msg{margin-top:12px;padding:10px;border-radius:10px}
     .msg.error{background:#fff1f2;color:#9f1239}
     .msg.success{background:#ecfdf5;color:#065f46}
-    .controls{display:flex; gap:8px; align-items:center; margin-top:12px}
-    .link{color:var(--accent); cursor:pointer; text-decoration:underline; font-size:13px}
-    .footer{margin-top:18px; font-size:13px; color:var(--muted)}
-    @media (max-width:880px){ .grid{grid-template-columns:1fr} }
+    .footer{margin-top:18px;font-size:13px;color:var(--muted)}
+    @media (max-width:880px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div>
         <h1>MyCard — User Portal</h1>
         <div class="small">Sign in with your card number and PIN to view balance and transactions</div>
       </div>
-      <div class="small">API: <strong>https://api.mycard.jamesallied.us</strong></div>
+      <div class="small">API: <strong>http://api.mycard.jamesallied.us</strong></div>
     </div>
 
     <div class="grid">
-      <!-- Left: Sign-in / Account actions -->
       <div class="card">
         <div id="authArea">
           <label for="cardNumber">Card number</label>
           <input id="cardNumber" type="text" inputmode="numeric" placeholder="1234-5678-9012-3456" autocomplete="off" />
-
           <label for="pin">PIN</label>
           <input id="pin" type="password" inputmode="numeric" placeholder="4-digit PIN" autocomplete="off" />
-
-          <div class="controls">
+          <div class="controls" style="display:flex;gap:8px;align-items:center;margin-top:12px">
             <button id="btnSignIn">Sign in</button>
             <button id="btnDemo" class="ghost">Demo card</button>
             <label style="margin-left:auto" class="small"><input id="remember" type="checkbox" /> Remember (session)</label>
           </div>
-
           <div id="signinMsg" class="msg" style="display:none"></div>
         </div>
 
         <div id="accountArea" style="display:none">
-          <div style="display:flex; justify-content:space-between; align-items:center">
+          <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
               <div class="small">Signed in as</div>
-              <div id="acctCard" style="font-weight:700; margin-top:6px"></div>
+              <div id="acctCard" style="font-weight:700;margin-top:6px"></div>
             </div>
             <div style="text-align:right">
               <div class="small">Status</div>
@@ -86,7 +73,7 @@
           <div style="margin-top:12px">
             <div class="small">Balance</div>
             <div id="acctBalance" class="balance">$0.00</div>
-            <div class="small" id="acctFrozen" style="display:none; color:var(--danger)">Account frozen</div>
+            <div class="small" id="acctFrozen" style="display:none;color:var(--danger)">Account frozen</div>
           </div>
 
           <div class="actions">
@@ -107,19 +94,18 @@
         </div>
 
         <div class="footer">
-          <div class="small">This page sends your card number and PIN to the API over HTTPS. Do not use public networks without TLS.</div>
+          <div class="small">This page sends your card number and PIN to the API over HTTP. Use only on trusted networks or enable TLS on the API host for production.</div>
         </div>
       </div>
 
-      <!-- Right: Transactions and details -->
       <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center">
+        <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
             <div class="small">Recent transactions</div>
             <div class="small" id="txCount">—</div>
           </div>
           <div>
-            <input id="filterInput" type="text" placeholder="Filter by card, desc, or status" style="padding:8px 10px; border-radius:8px; border:1px solid #eef2f7" />
+            <input id="filterInput" type="text" placeholder="Filter by card, desc, or status" style="padding:8px 10px;border-radius:8px;border:1px solid #eef2f7" />
           </div>
         </div>
 
@@ -134,7 +120,7 @@
           </table>
         </div>
 
-        <div style="margin-top:12px; display:flex; gap:8px; align-items:center">
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
           <button id="btnLoadMore" class="ghost">Load more</button>
           <div class="small" style="margin-left:auto">Showing <span id="shownCount">0</span> of <span id="totalCount">0</span></div>
         </div>
@@ -144,7 +130,7 @@
 
   <script>
     (function(){
-      const API_BASE = 'https://api.mycard.jamesallied.us';
+      const API_BASE = 'http://api.mycard.jamesallied.us';
       const $ = id => document.getElementById(id);
 
       let session = { token: null, card: null, expires: 0 };
@@ -276,7 +262,7 @@
         const slice = filtered.slice(0, pageLimit);
         for (const tx of slice) {
           const tr = document.createElement('tr');
-          const date = new Date(tx.transaction_ts || tx.transaction_ts || Date.now()).toLocaleString();
+          const date = new Date(tx.transaction_ts || Date.now()).toLocaleString();
           const amount = parseFloat(tx.transaction_amt || 0).toFixed(2);
           const statusClass = (tx.status||'').toLowerCase();
           const statusLabel = `<span class="status ${statusClass==='approved'?'approved':statusClass==='reverted'?'reverted':'pending'}">${tx.status||''}</span>`;
@@ -335,10 +321,8 @@
       });
 
       $('filterInput').addEventListener('input', (e) => renderTransactions(e.target.value));
-
       $('btnLoadMore').addEventListener('click', () => { pageLimit += 50; renderTransactions($('filterInput').value); });
 
-      // Try restore session from sessionStorage
       (function restore() {
         try {
           const s = sessionStorage.getItem('mycard_session');
@@ -355,7 +339,6 @@
         } catch(e){}
       })();
 
-      // Friendly keyboard UX
       ['cardNumber','pin','u_amount'].forEach(id => {
         const el = $(id);
         if (!el) return;
