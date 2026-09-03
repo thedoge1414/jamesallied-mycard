@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MyCard Bank Admin</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 20px; color:#111; }
+    h1 { margin-bottom: 6px; }
+    .panel { border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; margin-bottom: 16px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.03); }
+    label { display:block; margin:8px 0 4px; font-weight:600; }
+    input, select { width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; box-sizing:border-box; }
+    button { margin-top:10px; padding:10px 14px; border:0; background:#0b74de; color:#fff; border-radius:6px; cursor:pointer; }
+    button.secondary { background:#6b7280; }
+    .row { display:flex; gap:12px; }
+    .col { flex:1; }
+    .small { width:160px; }
+    pre { background:#f8fafc; padding:12px; border-radius:6px; overflow:auto; }
+    .msg { margin-top:10px; padding:10px; border-radius:6px; }
+    .msg.success { background:#ecfdf5; color:#065f46; border:1px solid #bbf7d0; }
+    .msg.error { background:#fff1f2; color:#9f1239; border:1px solid #fecaca; }
+    table { width:100%; border-collapse:collapse; margin-top:8px; }
+    th, td { text-align:left; padding:8px; border-bottom:1px solid #eef2f7; }
+  </style>
+</head>
+<body>
+  <h1>Bank Admin Console</h1>
+  <div class="panel">
+    <strong>API Base</strong>
+    <input id="apiBase" value="https://api.mycard.jamesallied.us" />
+  </div>
+
+  <div class="panel">
+    <h2>Quick Actions</h2>
+
+    <div class="row">
+      <div class="col">
+        <label>Deposit to Card</label>
+        <input id="depositCard" placeholder="Card number" />
+        <input id="depositAmount" placeholder="Amount (e.g. 25.00)" style="margin-top:8px" />
+        <button id="btnDeposit">Deposit</button>
+        <div id="depositMsg" class="msg" style="display:none"></div>
+      </div>
+
+      <div class="col">
+        <label>Withdraw from Card</label>
+        <input id="withdrawCard" placeholder="Card number" />
+        <input id="withdrawAmount" placeholder="Amount (e.g. 10.00)" style="margin-top:8px" />
+        <label style="margin-top:8px"><input type="checkbox" id="withdrawOverride" /> Bank override (ignore balance)</label>
+        <button id="btnWithdraw" class="secondary">Withdraw</button>
+        <div id="withdrawMsg" class="msg" style="display:none"></div>
+      </div>
+    </div>
+
+    <hr style="margin:16px 0" />
+
+    <div class="row">
+      <div class="col">
+        <label>Transfer</label>
+        <input id="transferFrom" placeholder="From card number" />
+        <input id="transferTo" placeholder="To card number" style="margin-top:8px" />
+        <input id="transferAmount" placeholder="Amount" style="margin-top:8px" />
+        <label style="margin-top:8px"><input type="checkbox" id="transferOverride" /> Bank override (ignore balance)</label>
+        <button id="btnTransfer">Transfer</button>
+        <div id="transferMsg" class="msg" style="display:none"></div>
+      </div>
+
+      <div class="col">
+        <label>Freeze / Unfreeze Card</label>
+        <input id="freezeCard" placeholder="Card number" />
+        <button id="btnToggleFreeze" class="secondary">Toggle Freeze</button>
+        <div id="freezeMsg" class="msg" style="display:none"></div>
+
+        <label style="margin-top:12px">Get Transaction History</label>
+        <input id="historyCard" placeholder="Card number" />
+        <button id="btnHistory" class="secondary">Get History</button>
+        <div id="historyMsg" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Raw Response</h2>
+    <pre id="rawOutput">No activity yet.</pre>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const apiBaseInput = $('apiBase');
+    const rawOutput = $('rawOutput');
+
+    function showRaw(obj) {
+      rawOutput.textContent = JSON.stringify(obj, null, 2);
+    }
+
+    function showMsg(elId, text, ok=true) {
+      const el = $(elId);
+      el.style.display = 'block';
+      el.className = 'msg ' + (ok ? 'success' : 'error');
+      el.textContent = text;
+      setTimeout(() => { el.style.display = 'none'; }, 8000);
+    }
+
+    async function fetchJson(url, opts={}) {
+      try {
+        const res = await fetch(url, opts);
+        const contentType = res.headers.get('content-type') || '';
+        let data = null;
+        if (contentType.includes('application/json')) data = await res.json();
+        else data = await res.text();
+        return { ok: res.ok, status: res.status, data };
+      } catch (err) {
+        return { ok:false, status:0, error: err.message };
+      }
+    }
+
+    // Deposit
+    $('btnDeposit').addEventListener('click', async () => {
+      const base = apiBaseInput.value.trim();
+      const card = $('depositCard').value.trim();
+      const amount = parseFloat($('depositAmount').value);
+      if (!card || isNaN(amount) || amount <= 0) { showMsg('depositMsg','Enter valid card and positive amount', false); return; }
+      const url = `${base}/bank/deposit`;
+      const res = await fetchJson(url, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ cardnumber: card, amount })
+      });
+      showRaw({ action:'deposit', request:{card,amount}, response:res });
+      if (res.ok) showMsg('depositMsg', `Deposit of $${amount.toFixed(2)} to ${card} succeeded.` , true);
+      else showMsg('depositMsg', `Deposit failed: ${res.data?.message || res.error || res.status}`, false);
+    });
+
+    // Withdraw
+    $('btnWithdraw').addEventListener('click', async () => {
+      const base = apiBaseInput.value.trim();
+      const card = $('withdrawCard').value.trim();
+      const amount = parseFloat($('withdrawAmount').value);
+      const override = $('withdrawOverride').checked;
+      if (!card || isNaN(amount) || amount <= 0) { showMsg('withdrawMsg','Enter valid card and positive amount', false); return; }
+      const url = `${base}/bank/withdraw${override ? '?ignorebalance=true' : ''}`;
+      const res = await fetchJson(url, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ cardnumber: card, amount })
+      });
+      showRaw({ action:'withdraw', request:{card,amount,override}, response:res });
+      if (res.ok) showMsg('withdrawMsg', `Withdrawal of $${amount.toFixed(2)} from ${card} succeeded.` , true);
+      else showMsg('withdrawMsg', `Withdrawal failed: ${res.data?.message || res.error || res.status}`, false);
+    });
+
+    // Transfer
+    $('btnTransfer').addEventListener('click', async () => {
+      const base = apiBaseInput.value.trim();
+      const from = $('transferFrom').value.trim();
+      const to = $('transferTo').value.trim();
+      const amount = parseFloat($('transferAmount').value);
+      const override = $('transferOverride').checked;
+      if (!from || !to || isNaN(amount) || amount <= 0) { showMsg('transferMsg','Enter valid from, to and positive amount', false); return; }
+      const url = `${base}/transactions/process${override ? '?ignorebalance=true' : ''}`;
+      const res = await fetchJson(url, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ fromCardnumber: from, toCardnumber: to, amount })
+      });
+      showRaw({ action:'transfer', request:{from,to,amount,override}, response:res });
+      if (res.ok) showMsg('transferMsg', `Transfer of $${amount.toFixed(2)} from ${from} to ${to} succeeded.` , true);
+      else showMsg('transferMsg', `Transfer failed: ${res.data?.message || res.error || res.status}`, false);
+    });
+
+    // Toggle freeze
+    $('btnToggleFreeze').addEventListener('click', async () => {
+      const base = apiBaseInput.value.trim();
+      const card = $('freezeCard').value.trim();
+      if (!card) { showMsg('freezeMsg','Enter a card number', false); return; }
+      const url = `${base}/cards/${encodeURIComponent(card)}/togglefreeze`;
+      const res = await fetchJson(url);
+      showRaw({ action:'toggleFreeze', request:{card}, response:res });
+      if (res.ok) showMsg('freezeMsg', res.data?.message || 'Freeze toggled', true);
+      else showMsg('freezeMsg', `Toggle failed: ${res.data?.message || res.error || res.status}`, false);
+    });
+
+    // History
+    $('btnHistory').addEventListener('click', async () => {
+      const base = apiBaseInput.value.trim();
+      const card = $('historyCard').value.trim();
+      if (!card) { $('historyMsg').textContent = 'Enter a card number'; return; }
+      const url = `${base}/cards/${encodeURIComponent(card)}/transactions`;
+      const res = await fetchJson(url);
+      showRaw({ action:'history', request:{card}, response:res });
+      if (res.ok) {
+        const rows = Array.isArray(res.data) ? res.data : [];
+        $('historyMsg').innerHTML = `<strong>${rows.length}</strong> transactions returned. See raw output for details.`;
+      } else {
+        $('historyMsg').textContent = `Failed to fetch history: ${res.data?.message || res.error || res.status}`;
+      }
+    });
+
+    // Keep last responses for follow-up pages if needed
+    window.showRaw = showRaw;
+  </script>
+</body>
+</html>
