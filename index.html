@@ -3,66 +3,76 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MyCard — User Portal</title>
+  <title>MyCard User Dashboard</title>
   <style>
-    :root{--bg:#f6f8fb;--card:#fff;--muted:#64748b;--accent:#0b74de;--danger:#ef4444;--radius:12px;--pad:18px;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial}
-    html,body{height:100%;margin:0;background:var(--bg);color:#0f172a}
-    .wrap{max-width:920px;margin:36px auto;padding:20px}
-    .grid{display:grid;grid-template-columns:360px 1fr;gap:20px}
-    .card{background:var(--card);border-radius:var(--radius);padding:var(--pad);box-shadow:0 6px 20px rgba(2,6,23,0.06)}
-    h1{margin:0 0 8px;font-size:20px}
-    label{display:block;font-size:13px;color:var(--muted);margin-top:12px}
-    input[type="text"],input[type="password"],input[type="number"]{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #e6eef8;box-sizing:border-box;font-size:15px;margin-top:6px}
-    button{background:var(--accent);color:#fff;border:0;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:600}
-    button.ghost{background:transparent;color:var(--accent);border:1px solid #dbeafe}
-    .small{font-size:13px;color:var(--muted)}
-    .row{display:flex;gap:8px}
-    .actions{display:flex;gap:8px;margin-top:12px}
-    .balance{font-size:28px;font-weight:700;margin-top:6px}
-    .tx-list{margin-top:12px;max-height:360px;overflow:auto}
-    table{width:100%;border-collapse:collapse;font-size:14px}
-    th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #f1f5f9}
-    .status{padding:6px 8px;border-radius:8px;font-weight:600;font-size:12px}
+    :root{
+      --bg:#f6f8fb; --card:#fff; --muted:#64748b; --accent:#0b74de; --danger:#ef4444;
+      --success:#059669; --radius:12px; --pad:18px; font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;
+    }
+    html,body{height:100%; margin:0; background:var(--bg); color:#0f172a}
+    .wrap{max-width:980px; margin:28px auto; padding:20px}
+    .grid{display:grid; grid-template-columns:320px 1fr; gap:20px}
+    .card{background:var(--card); border-radius:var(--radius); padding:var(--pad); box-shadow:0 6px 20px rgba(2,6,23,0.06)}
+    h1{margin:0 0 8px; font-size:20px}
+    label{display:block; font-size:13px; color:var(--muted); margin-top:12px}
+    input[type="text"], input[type="password"], input[type="number"], select{
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #e6eef8; box-sizing:border-box; font-size:15px; margin-top:6px;
+    }
+    button{background:var(--accent); color:#fff; border:0; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:600}
+    button.ghost{background:transparent; color:var(--accent); border:1px solid #dbeafe}
+    .small{font-size:13px; color:var(--muted)}
+    .row{display:flex; gap:8px}
+    .actions{display:flex; gap:8px; margin-top:12px}
+    .balance{font-size:28px; font-weight:700; margin-top:6px}
+    .tx-list{margin-top:12px; max-height:520px; overflow:auto}
+    table{width:100%; border-collapse:collapse; font-size:14px}
+    th,td{padding:10px 8px; text-align:left; border-bottom:1px solid #f1f5f9}
+    .status{padding:6px 8px; border-radius:8px; font-weight:600; font-size:12px}
     .status.approved{background:#ecfdf5;color:#065f46}
     .status.reverted{background:#fff7ed;color:#92400e}
     .status.pending{background:#eef2ff;color:#1e3a8a}
     .msg{margin-top:12px;padding:10px;border-radius:10px}
     .msg.error{background:#fff1f2;color:#9f1239}
     .msg.success{background:#ecfdf5;color:#065f46}
-    .footer{margin-top:18px;font-size:13px;color:var(--muted)}
-    @media (max-width:880px){.grid{grid-template-columns:1fr}}
+    .controls{display:flex; gap:8px; align-items:center; margin-top:12px}
+    .footer{margin-top:18px; font-size:13px; color:var(--muted)}
+    @media (max-width:900px){ .grid{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
       <div>
-        <h1>MyCard — User Portal</h1>
-        <div class="small">Sign in with your card number and PIN to view balance and transactions</div>
+        <h1>MyCard Dashboard</h1>
+        <div class="small">Sign in with your card number and PIN to view balance, history, and send money</div>
       </div>
       <div class="small">API: <strong>http://api.mycard.jamesallied.us</strong></div>
     </div>
 
     <div class="grid">
+      <!-- Left column: auth and quick actions -->
       <div class="card">
-        <div id="authArea">
-          <label for="cardNumber">Card number</label>
-          <input id="cardNumber" type="text" inputmode="numeric" placeholder="1234-5678-9012-3456" autocomplete="off" />
-          <label for="pin">PIN</label>
-          <input id="pin" type="password" inputmode="numeric" placeholder="4-digit PIN" autocomplete="off" />
-          <div class="controls" style="display:flex;gap:8px;align-items:center;margin-top:12px">
+        <div id="authPanel">
+          <label>Card number</label>
+          <input id="cardNumber" type="text" inputmode="numeric" placeholder="Enter card number" autocomplete="off" />
+
+          <label>PIN</label>
+          <input id="pin" type="password" inputmode="numeric" placeholder="Enter PIN" autocomplete="off" />
+
+          <div class="controls">
             <button id="btnSignIn">Sign in</button>
-            <button id="btnDemo" class="ghost">Demo card</button>
-            <label style="margin-left:auto" class="small"><input id="remember" type="checkbox" /> Remember (session)</label>
+            <button id="btnDemo" class="ghost">Demo</button>
+            <label style="margin-left:auto" class="small"><input id="remember" type="checkbox" /> Keep session</label>
           </div>
+
           <div id="signinMsg" class="msg" style="display:none"></div>
         </div>
 
-        <div id="accountArea" style="display:none">
-          <div style="display:flex;justify-content:space-between;align-items:center">
+        <div id="accountPanel" style="display:none">
+          <div style="display:flex; justify-content:space-between; align-items:center">
             <div>
               <div class="small">Signed in as</div>
-              <div id="acctCard" style="font-weight:700;margin-top:6px"></div>
+              <div id="acctCard" style="font-weight:700; margin-top:6px"></div>
             </div>
             <div style="text-align:right">
               <div class="small">Status</div>
@@ -73,7 +83,7 @@
           <div style="margin-top:12px">
             <div class="small">Balance</div>
             <div id="acctBalance" class="balance">$0.00</div>
-            <div class="small" id="acctFrozen" style="display:none;color:var(--danger)">Account frozen</div>
+            <div id="acctFrozen" class="small" style="display:none; color:var(--danger)">Account frozen</div>
           </div>
 
           <div class="actions">
@@ -82,37 +92,46 @@
             <div style="margin-left:auto" class="small">Token expires in <span id="tokenTtl">—</span></div>
           </div>
 
-          <div style="margin-top:12px">
-            <label>Quick transfer</label>
-            <input id="u_to" type="text" placeholder="Recipient card number" />
+          <hr style="margin:14px 0" />
+
+          <div>
+            <label>Send money</label>
+            <input id="sendTo" type="text" placeholder="Recipient card number" />
+            <input id="sendAmount" type="number" placeholder="Amount" style="margin-top:8px" />
             <div class="row" style="margin-top:8px">
-              <input id="u_amount" type="number" placeholder="Amount" style="flex:1" />
-              <button id="u_transfer" style="width:120px">Send</button>
+              <button id="btnSend" style="flex:1">Send</button>
+              <button id="btnHistoryQuick" class="ghost">My history</button>
             </div>
-            <div id="userMsg" class="msg" style="display:none"></div>
+            <div id="sendMsg" class="msg" style="display:none"></div>
           </div>
         </div>
 
         <div class="footer">
-          <div class="small">This page sends your card number and PIN to the API over HTTP. Use only on trusted networks or enable TLS on the API host for production.</div>
+          <div class="small">This page uses HTTP to reach the API. For production enable TLS. Tokens are stored in sessionStorage only when requested.</div>
         </div>
       </div>
 
+      <!-- Right column: transactions -->
       <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex; justify-content:space-between; align-items:center">
           <div>
-            <div class="small">Recent transactions</div>
-            <div class="small" id="txCount">—</div>
+            <div class="small">Transaction history</div>
+            <div id="txCount" class="small">—</div>
           </div>
-          <div>
-            <input id="filterInput" type="text" placeholder="Filter by card, desc, or status" style="padding:8px 10px;border-radius:8px;border:1px solid #eef2f7" />
+          <div style="display:flex; gap:8px; align-items:center">
+            <input id="filter" type="text" placeholder="Filter by card, desc, or status" style="padding:8px 10px; border-radius:8px; border:1px solid #eef2f7" />
+            <select id="limit" style="padding:8px 10px; border-radius:8px; border:1px solid #eef2f7">
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+            </select>
           </div>
         </div>
 
         <div class="tx-list" id="txList" style="margin-top:12px">
           <table>
             <thead>
-              <tr><th>Date</th><th>From</th><th>To</th><th>Amount</th><th>Desc</th><th>Status</th></tr>
+              <tr><th>Date</th><th>From</th><th>To</th><th>Amount</th><th>Description</th><th>Status</th></tr>
             </thead>
             <tbody id="txBody">
               <tr><td colspan="6" class="small muted">Sign in to view transactions</td></tr>
@@ -120,9 +139,11 @@
           </table>
         </div>
 
-        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
-          <button id="btnLoadMore" class="ghost">Load more</button>
-          <div class="small" style="margin-left:auto">Showing <span id="shownCount">0</span> of <span id="totalCount">0</span></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px">
+          <div class="small">Showing <span id="shown">0</span></div>
+          <div>
+            <button id="btnLoadMore" class="ghost">Load more</button>
+          </div>
         </div>
       </div>
     </div>
@@ -135,27 +156,27 @@
 
       let session = { token: null, card: null, expires: 0 };
       let transactions = [];
-      let pageLimit = 50;
+      let limit = parseInt($('limit').value, 10) || 50;
 
-      function show(el, ok=true, text='') {
+      function showMsg(el, ok, text) {
         if (!el) return;
         if (!text) { el.style.display = 'none'; return; }
         el.style.display = 'block';
         el.className = 'msg ' + (ok ? 'success' : 'error');
         el.textContent = text;
-        setTimeout(()=>{ el.style.display='none'; }, 7000);
+        setTimeout(()=> el.style.display='none', 7000);
       }
 
-      function setAuthState(s) {
+      function setSignedIn(s) {
         session = s || { token:null, card:null, expires:0 };
         if (session && session.token) {
-          $('authArea').style.display = 'none';
-          $('accountArea').style.display = 'block';
+          $('authPanel').style.display = 'none';
+          $('accountPanel').style.display = 'block';
           $('acctCard').textContent = session.card;
           updateTokenTtl();
         } else {
-          $('authArea').style.display = 'block';
-          $('accountArea').style.display = 'none';
+          $('authPanel').style.display = 'block';
+          $('accountPanel').style.display = 'none';
           $('acctCard').textContent = '';
           $('acctBalance').textContent = '$0.00';
           $('txBody').innerHTML = '<tr><td colspan="6" class="small muted">Sign in to view transactions</td></tr>';
@@ -169,7 +190,6 @@
         const secs = Math.max(0, Math.floor((session.expires - Date.now())/1000));
         $('tokenTtl').textContent = secs + 's';
       }
-
       setInterval(updateTokenTtl, 1000);
 
       async function fetchJson(url, opts={}) {
@@ -190,15 +210,14 @@
           body: JSON.stringify({ cardnumber: card, pin })
         });
         if (!res.ok) {
-          const msg = res.data?.message || res.error || `Sign in failed (${res.status})`;
-          show($('signinMsg'), false, msg);
+          showMsg($('signinMsg'), false, res.data?.message || res.error || `Sign in failed (${res.status})`);
           return false;
         }
-        const payload = res.data;
-        session = { token: payload.token, card: payload.card.cardnumber, expires: Date.parse(payload.expires_at || (Date.now() + (payload.expires_in_seconds||3600)*1000)) };
+        const p = res.data;
+        session = { token: p.token, card: p.card.cardnumber, expires: Date.parse(p.expires_at || (Date.now() + (p.expires_in_seconds||3600)*1000)) };
         if (remember && window.sessionStorage) sessionStorage.setItem('mycard_session', JSON.stringify(session));
-        setAuthState(session);
-        show($('signinMsg'), true, 'Signed in successfully.');
+        setSignedIn(session);
+        showMsg($('signinMsg'), true, 'Signed in successfully.');
         await loadBalance();
         await loadTransactions();
         return true;
@@ -210,8 +229,8 @@
         }
         session = { token:null, card:null, expires:0 };
         sessionStorage.removeItem('mycard_session');
-        setAuthState(null);
-        show($('signinMsg'), true, 'Signed out.');
+        setSignedIn(null);
+        showMsg($('signinMsg'), true, 'Signed out.');
       }
 
       async function loadBalance() {
@@ -220,7 +239,7 @@
           headers: { 'Authorization': 'Bearer ' + session.token }
         });
         if (!res.ok) {
-          show($('signinMsg'), false, res.data?.message || res.error || 'Failed to fetch balance');
+          showMsg($('signinMsg'), false, res.data?.message || res.error || 'Failed to fetch balance');
           return;
         }
         const d = res.data;
@@ -234,7 +253,7 @@
           headers: { 'Authorization': 'Bearer ' + session.token }
         });
         if (!res.ok) {
-          show($('userMsg'), false, res.data?.message || res.error || 'Failed to fetch transactions');
+          showMsg($('userMsg'), false, res.data?.message || res.error || 'Failed to fetch transactions');
           return;
         }
         transactions = Array.isArray(res.data.transactions) ? res.data.transactions : (Array.isArray(res.data) ? res.data : []);
@@ -253,13 +272,12 @@
             || (tx.status||'').toString().toLowerCase().includes(f);
         });
         $('txCount').textContent = filtered.length + ' transactions';
-        $('shownCount').textContent = Math.min(filtered.length, pageLimit);
-        $('totalCount').textContent = filtered.length;
-        if (filtered.length === 0) {
+        const slice = filtered.slice(0, limit);
+        $('shown').textContent = slice.length;
+        if (slice.length === 0) {
           tbody.innerHTML = '<tr><td colspan="6" class="small muted">No transactions found.</td></tr>';
           return;
         }
-        const slice = filtered.slice(0, pageLimit);
         for (const tx of slice) {
           const tr = document.createElement('tr');
           const date = new Date(tx.transaction_ts || Date.now()).toLocaleString();
@@ -276,18 +294,19 @@
         }
       }
 
-      async function quickTransfer(to, amount) {
-        if (!session || !session.token) { show($('userMsg'), false, 'Sign in first'); return; }
+      async function sendMoney(to, amount) {
+        if (!session || !session.token) { showMsg($('sendMsg'), false, 'Sign in first'); return; }
+        const payload = { fromCardnumber: session.card, toCardnumber: to, amount: parseFloat(amount) };
         const res = await fetchJson(API_BASE + '/transactions/process', {
           method:'POST',
           headers:{ 'Content-Type':'application/json', 'Authorization': 'Bearer ' + session.token },
-          body: JSON.stringify({ fromCardnumber: session.card, toCardnumber: to, amount })
+          body: JSON.stringify(payload)
         });
         if (!res.ok) {
-          show($('userMsg'), false, res.data?.message || res.error || 'Transfer failed');
+          showMsg($('sendMsg'), false, res.data?.message || res.error || 'Transfer failed');
           return;
         }
-        show($('userMsg'), true, `Sent $${parseFloat(amount).toFixed(2)} to ${to}`);
+        showMsg($('sendMsg'), true, `Sent $${parseFloat(amount).toFixed(2)} to ${to}`);
         await loadBalance();
         await loadTransactions();
       }
@@ -297,7 +316,7 @@
         const card = $('cardNumber').value.trim();
         const pin = $('pin').value.trim();
         const remember = $('remember').checked;
-        if (!card || !pin) { show($('signinMsg'), false, 'Enter card number and PIN'); return; }
+        if (!card || !pin) { showMsg($('signinMsg'), false, 'Enter card number and PIN'); return; }
         $('btnSignIn').disabled = true;
         await signIn(card, pin, remember);
         $('btnSignIn').disabled = false;
@@ -309,20 +328,24 @@
       });
 
       $('btnSignOut').addEventListener('click', signOut);
-      $('btnRefresh').addEventListener('click', async () => { await loadBalance(); await loadTransactions(); show($('signinMsg'), true, 'Refreshed'); });
+      $('btnRefresh').addEventListener('click', async () => { await loadBalance(); await loadTransactions(); showMsg($('signinMsg'), true, 'Refreshed'); });
 
-      $('u_transfer').addEventListener('click', async () => {
-        const to = $('u_to').value.trim();
-        const amount = parseFloat($('u_amount').value);
-        if (!to || isNaN(amount) || amount <= 0) { show($('userMsg'), false, 'Enter recipient and positive amount'); return; }
-        $('u_transfer').disabled = true;
-        await quickTransfer(to, amount);
-        $('u_transfer').disabled = false;
+      $('btnSend').addEventListener('click', async () => {
+        const to = $('sendTo').value.trim();
+        const amount = parseFloat($('sendAmount').value);
+        if (!to || isNaN(amount) || amount <= 0) { showMsg($('sendMsg'), false, 'Enter recipient and positive amount'); return; }
+        $('btnSend').disabled = true;
+        await sendMoney(to, amount);
+        $('btnSend').disabled = false;
       });
 
-      $('filterInput').addEventListener('input', (e) => renderTransactions(e.target.value));
-      $('btnLoadMore').addEventListener('click', () => { pageLimit += 50; renderTransactions($('filterInput').value); });
+      $('btnHistoryQuick').addEventListener('click', async () => { await loadTransactions(); showMsg($('signinMsg'), true, 'History refreshed'); });
 
+      $('filter').addEventListener('input', (e) => renderTransactions(e.target.value));
+      $('limit').addEventListener('change', (e) => { limit = parseInt(e.target.value,10); renderTransactions($('filter').value); });
+      $('btnLoadMore').addEventListener('click', () => { limit += 50; renderTransactions($('filter').value); });
+
+      // Restore session if present
       (function restore() {
         try {
           const s = sessionStorage.getItem('mycard_session');
@@ -330,7 +353,7 @@
           const parsed = JSON.parse(s);
           if (parsed && parsed.token && parsed.expires && parsed.expires > Date.now()) {
             session = parsed;
-            setAuthState(session);
+            setSignedIn(session);
             loadBalance();
             loadTransactions();
           } else {
@@ -339,10 +362,11 @@
         } catch(e){}
       })();
 
-      ['cardNumber','pin','u_amount'].forEach(id => {
+      // keyboard UX
+      ['cardNumber','pin','sendAmount'].forEach(id => {
         const el = $(id);
         if (!el) return;
-        el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { if (id==='u_amount') $('u_transfer').click(); else $('btnSignIn').click(); } });
+        el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { if (id === 'sendAmount') $('btnSend').click(); else $('btnSignIn').click(); } });
       });
     })();
   </script>
