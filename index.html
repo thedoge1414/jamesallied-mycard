@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MyCard User Portal</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#f7fafc; color:#0f172a; padding:24px; }
+    .card { max-width:520px; margin:0 auto; background:#fff; padding:20px; border-radius:10px; box-shadow:0 6px 18px rgba(2,6,23,0.06); }
+    h1 { margin:0 0 12px; font-size:20px; }
+    label { display:block; margin-top:10px; font-weight:600; }
+    input { width:100%; padding:10px; border-radius:8px; border:1px solid #e2e8f0; box-sizing:border-box; }
+    button { margin-top:12px; padding:10px 14px; border-radius:8px; border:0; background:#0b74de; color:#fff; cursor:pointer; width:100%; }
+    .actions { display:flex; gap:8px; margin-top:12px; }
+    .actions button { flex:1; }
+    .msg { margin-top:12px; padding:10px; border-radius:8px; }
+    .msg.success { background:#ecfdf5; color:#065f46; border:1px solid #bbf7d0; }
+    .msg.error { background:#fff1f2; color:#9f1239; border:1px solid #fecaca; }
+    .info { margin-top:12px; font-size:14px; color:#475569; }
+    .mini { font-size:13px; color:#64748b; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Sign in to MyCard</h1>
+
+    <label>Card Number</label>
+    <input id="cardNumber" placeholder="Enter your card number" autocomplete="off" />
+
+    <label>PIN</label>
+    <input id="pin" placeholder="4-digit PIN" type="password" autocomplete="off" />
+
+    <button id="btnSignIn">Sign In</button>
+
+    <div id="signinMsg" class="msg" style="display:none"></div>
+
+    <div id="userArea" style="display:none; margin-top:16px;">
+      <div class="info" id="welcome"></div>
+
+      <div style="margin-top:12px;">
+        <strong>Balance</strong>
+        <div id="balance" class="mini">—</div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <strong>Quick Transfer</strong>
+        <input id="u_to" placeholder="Recipient card number" style="margin-top:8px" />
+        <input id="u_amount" placeholder="Amount" style="margin-top:8px" />
+        <div class="actions">
+          <button id="u_transfer">Send</button>
+          <button id="u_history" class="secondary">History</button>
+        </div>
+      </div>
+
+      <div id="userMsg" class="msg" style="display:none"></div>
+
+      <div id="historyList" style="margin-top:12px;"></div>
+
+      <div style="margin-top:12px;">
+        <button id="btnSignOut" class="secondary">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="mini">This portal uses the MyCard API at <strong>https://api.mycard.jamesallied.us</strong></div>
+  </div>
+
+  <script>
+    const apiBase = 'https://api.mycard.jamesallied.us';
+    const $ = id => document.getElementById(id);
+
+    function show(el, ok=true, text='') {
+      el.style.display = text ? 'block' : 'none';
+      if (text) {
+        el.className = 'msg ' + (ok ? 'success' : 'error');
+        el.textContent = text;
+        setTimeout(() => { el.style.display = 'none'; }, 7000);
+      }
+    }
+
+    async function fetchJson(url, opts={}) {
+      try {
+        const res = await fetch(url, opts);
+        const ct = res.headers.get('content-type') || '';
+        const data = ct.includes('application/json') ? await res.json() : await res.text();
+        return { ok: res.ok, status: res.status, data };
+      } catch (err) {
+        return { ok:false, status:0, error: err.message };
+      }
+    }
+
+    // Sign in flow
+    $('btnSignIn').addEventListener('click', async () => {
+      const card = $('cardNumber').value.trim();
+      const pin = $('pin').value.trim();
+      if (!card || !pin) { show($('signinMsg'), false, 'Please enter card number and PIN.'); return; }
+
+      // Try a dedicated auth endpoint first
+      let authRes = await fetchJson(`${apiBase}/auth/login`, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ cardnumber: card, pin })
+      });
+
+      // If auth endpoint not available, fallback to balance check with pin param
+      if (!authRes.ok && (authRes.status === 404 || authRes.status === 0)) {
+        authRes = await fetchJson(`${apiBase}/cards/${encodeURIComponent(card)}/balance?pin=${encodeURIComponent(pin)}`);
+      }
+
+      if (!authRes.ok) {
+        const msg = authRes.data?.message || authRes.error || `Sign in failed (${authRes.status})`;
+        show($('signinMsg'), false, msg);
+        return;
+      }
+
+      // If auth returned user info or balance, treat as success
+      const payload = authRes.data || {};
+      // Save session in memory (simple)
+      window._session = { card, pin, info: payload };
+      $('welcome').textContent = `Signed in as ${card}`;
+      $('userArea').style.display = 'block';
+      show($('signinMsg'), true, 'Signed in successfully.');
+      // Load balance and history
+      await loadBalance();
+      await loadHistory();
+    });
+
+    async function loadBalance() {
+      const s = window._session;
+      if (!s) return;
+      // Prefer balance endpoint with pin param
+      const res = await fetchJson(`${apiBase}/cards/${encodeURIComponent(s.card)}/balance?pin=${encodeURIComponent(s.pin)}`);
+      if (res.ok && res.data) {
+        $('balance').textContent = `$${parseFloat(res.data.balance).toFixed(2)} ${res.data.frozen ? '(Frozen)' : ''}`;
+      } else {
+        $('balance').textContent = 'Unable to fetch balance';
+      }
+    }
+
+    async function loadHistory() {
+      const s = window._session;
+      if (!s) return;
+      const res = await fetchJson(`${apiBase}/cards/${encodeURIComponent(s.card)}/transactions`);
+      const container = $('historyList');
+      container.innerHTML = '';
+      if (res.ok && Array.isArray(res.data)) {
+        if (res.data.length === 0) container.textContent = 'No transactions found.';
+        else {
+          const ul = document.createElement('ul');
+          res.data.slice(0,20).forEach(tx => {
+            const li = document.createElement('li');
+            li.textContent = `${tx.transaction_ts} — ${tx.from_card || 'BANK'} → ${tx.to_card || 'BANK'} : $${parseFloat(tx.transaction_amt).toFixed(2)} — ${tx.status}`;
+            ul.appendChild(li);
+          });
+          container.appendChild(ul);
+        }
+      } else {
+        container.textContent = 'Unable to fetch history.';
+      }
+    }
+
+    // Transfer from signed-in user
+    $('u_transfer').addEventListener('click', async () => {
+      const s = window._session;
+      if (!s) { show($('userMsg'), false, 'Please sign in first.'); return; }
+      const to = $('u_to').value.trim();
+      const amount = parseFloat($('u_amount').value);
+      if (!to || isNaN(amount) || amount <= 0) { show($('userMsg'), false, 'Enter recipient and positive amount.'); return; }
+
+      const res = await fetchJson(`${apiBase}/transactions/process`, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ fromCardnumber: s.card, toCardnumber: to, amount })
+      });
+
+      if (res.ok) {
+        show($('userMsg'), true, `Sent $${amount.toFixed(2)} to ${to}.`);
+        await loadBalance();
+        await loadHistory();
+      } else {
+        show($('userMsg'), false, res.data?.message || res.error || `Transfer failed (${res.status})`);
+      }
+    });
+
+    // History button
+    $('u_history').addEventListener('click', async () => {
+      await loadHistory();
+    });
+
+    // Sign out
+    $('btnSignOut').addEventListener('click', () => {
+      window._session = null;
+      $('userArea').style.display = 'none';
+      show($('signinMsg'), true, 'Signed out.');
+    });
+
+    // Friendly keyboard UX
+    ['cardNumber','pin'].forEach(id => {
+      $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btnSignIn').click(); });
+    });
+  </script>
+</body>
+</html>
